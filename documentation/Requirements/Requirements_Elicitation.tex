@@ -1,0 +1,553 @@
+\documentclass[a4paper,11pt]{article}
+\usepackage[utf8]{inputenc}
+\usepackage{graphicx}
+\usepackage{pdfpages}
+\usepackage[none]{hyphenat}
+\usepackage{xcolor,colortbl}
+\definecolor{Gray}{rgb}{0.9,0.9,0.9}
+\usepackage[top=2cm, bottom=2cm, left=2.5cm, right=2.5cm]{geometry}
+\usepackage{enumitem}
+\usepackage{graphicx}
+
+% ------------ Title section
+
+\renewcommand{\theenumi}{\thesubsection.\arabic{enumi}}
+\renewcommand{\labelenumii}{\theenumii}
+\renewcommand{\theenumii}{\theenumi.\arabic{enumii}.}
+
+\title{
+\vspace{-8cm}
+\begin{flushleft}
+    \vspace{10cm}
+    \normalfont \normalsize
+    %\Huge Bachelor/Master Thesis Project \\
+    \vspace{-1.3cm}
+\end{flushleft}
+\vspace{3cm}
+\begin{flushleft}
+    \huge Face Recognition System \\
+    \LARGE  Requirements Elicitation v1.0\\
+\end{flushleft}
+\null
+\vfill
+\begin{minipage}{\textwidth}
+\begin{flushleft} \large
+\emph{Authors:} Walid Balegh, Jakob Heyder, Sarpreet Singh Buttar, Henry Pap\\ \hspace{45pt} and Oscar Maris \\ % Author
+%\emph{Supervisor:} Name of your supervisor\\ % Supervisor
+%\emph{Examiner:} Dr.~Mark \textsc{Brown}\\ % Examiner (course manager)
+\emph{Semester:} VT 2017\\ %
+%\emph{Subject:} Computer Science\\ % Subject area
+\end{flushleft}
+\end{minipage}
+}
+
+\date{}
+
+% ------------- Document beginning
+\begin{document}
+
+\maketitle
+
+\newpage
+
+\tableofcontents
+
+\newpage
+
+%  ############ NOTES ################
+%  Roles [Admin, User, System] - Description, Objectives
+
+%Introduction [Scope(exclude to broad goals), Purpose etc.]
+
+%Domain Knowledge and Constraints (Overview)
+%-> Non functional requirements (Quality constraints, platform constraints, process constraint)
+
+%System as it is -> System to be (Why?, What? , How? and Who?)
+
+%Functional requirements
+%-> verifiable !
+%-> inputs , outputs , data , computation, timing (of system)
+%-> traceable to rational (real world problem from customer)
+%  ############ NOTES ################
+\newpage
+
+\section{Introduction}
+
+\subsection{Purpose}
+The purpose of this document is to describe the requirements for a face recognition system which matches a photo and a Swedish personal number by exposing a well defined API. Additionally it will describe the requirements for a sample client user system which uses the API.
+\newline
+\noindent
+The intended audience includes the software developers and the respective clients assessment person.
+
+\subsection{Scope}
+
+The software system to be produced is a Face Recognition System, which will be referred  to as "FRS" through this document.
+\newline
+\noindent
+The Face Recognition System will allow authenticated services to request a personal number with a given photo.
+FRS could be used in bank-, state systems or other services where identification of a person is critical.
+The administrative entity could be a state or other high security organization which provides the data used from the FRS. \label{HighSecurityOrganisation}
+FRS administrators will be able to register, delete, update and list user data.
+Therefore the FRS is split into a user component and an administrative component, which each needs different authentication and are logically separate from each other.
+
+
+\subsection{Definitions, acronyms and abbreviations}
+\label{ReqDefinitions}
+\begin{itemize}
+\item \textbf{URM : User Repository Module}
+\item \textbf{ARM : Admin Repository Module}
+\item \textbf{UAM : User Application Module}
+\item \textbf{AAM : Admin Application Module}
+\item \textbf{EFR : External Face Recognition API}
+\item \textbf{FRS : Face Recognition System to be developed}
+\item \textbf{PN : Swedish Personal Number}
+\item \textbf{Repository: Module where the data can be accessed and processed}
+\item \textbf{User-Entity: A User entity consists of a personal number and a picture of the person}
+\end{itemize}
+
+\subsection{References}
+N/A
+\subsection{Stakeholders} \label{Roles}
+\begin{itemize}
+\item \textbf{Customer: } LNUs Teaching Team which represents a fictive company which wants the FRS.
+\item \textbf{User :} Verified and registered partner which is authenticated to use the the User API. E.g. Skatteverket or Swedbank.
+\item \textbf{Admin :} Verified and registered partner which provides the trusted information and has full control over the application and data.
+\item \textbf{Developer :} Fully privileged people which develop the system and have access to the Admin-,User interfaces and the source code during development.
+\end{itemize}
+
+\subsection{Overview}
+The rest of this document contains an overall description of the Face Recognition System and the constraints (section 2), the specific functional requirements for the system (section 3) and the Use case and scenario modeling for functional requirements (section 4).
+
+\newpage
+\section{Overall description}
+
+\subsection{Product perspective}
+In some services such as financial or official matters there is a need to identify a person fast and securely. The FRS can provide this functionality and make the process easier and more reliable.
+
+\subsubsection{System Interfaces} \label{ReqSystemInterfaces}
+The FRS depends on an external face recognition API to compare the photos. This service can be developed in house or made use of existing systems. Beside the external dependency it consists of four different modules: the User Application Module (UCM), the User Repository Module (URM), the Admin Repository Module (ARM) and a database. (see figure 1)
+\begin{figure}[h!]
+	\centering
+	\label{System Interfaces}
+	\includegraphics[width=0.95\textwidth,keepaspectratio]{images/Overview\string_System\string_Interfaces.jpg}
+	\caption{Overview over the system interfaces}
+\end{figure}
+\newpage
+\noindent
+The UCM allows User services to log on to the FRS and request a personal number with a given image. The URM is a daemon that accepts connections from the UCM and serves with the requested information. The URM is dependent on the External Face Recogntion API (EFR) to match the given photo to a registered one. The Admin Repository Module serves the API for the ACM to register, delete, update and get user data. It directly interacts with the PN-Database and indirectly uses the EFR to modify the Image-Database.
+\newline
+\noindent
+The User Application Module can be \textit{any} verified and registered Application which depends on the URM API. The given UCM will be an example service. The gray marked components are external components that are not in the scope of this document and will only be mentioned in context of dependencies. From the other modules our primary product will be the server (URM and ARM) with a clear defined API. Additionally - as the customer required - we develop a simple client which can show usage and integration of the API how a customer developed application could use it.
+
+\subsubsection{User Interfaces} \label{User_Interfaces}
+The User Application Module must provide an interface to manage the API. This will be a mobile (e.g. Android/iOS) or web (WWW Browser) interface.
+\subsubsection{Hardware Interfaces}
+All components must be able to execute on a personal computer.
+
+\subsubsection{Software Interfaces}
+The software interfaces of the modules will be further defined in the FRS Design Document.
+
+\subsubsection{Communication Interfaces}
+All communication will be over the Internet.
+The PN-database will be located locally or interacted remotely over an Internet connection, this will be further defined in the FRS Design Document.
+
+\subsubsection{Security constraints} \label{2.1.6 Security constraints}
+All sent personal numbers must be encrypted end to end. Services must be authenticated to interact with the API. The external service does not have any information about the personal numbers or other high security informations saved and only the images are shared.
+
+\subsection{Product functions} \label{ReqProductFunctions}
+The two main functions of the Face Recognition System are to allow user services to retrieve a PN corresponding to a photo of a face, and to allow administrators to manage User-Entities.
+\newline
+\noindent
+For managerial purposes it is useful to have the option to \textit{RETRIEVE} all persons and then have the basic REST functionality to \textit{ADD},\textit{UPDATE} or \textit{DELETE} User-Entities. A User entity consists of a personal number and a (optimally biometric) picture of the person.
+
+\subsection{User characteristics}
+The User as defined in \ref{Roles} is a verified and registered service which provides the User Application Module to interact with the URM.
+
+\subsection{Constraints} \label{ReqConstraints}
+The system should enforce User and Admin authentication security and guarantee encrypted communication of critical data.
+The system should not take more than 5seconds response time when retrieving a PN with a photo.
+
+\subsection{Assumptions and Dependencies}
+The FRS will depend on an external face recognition API to compare photos. This can be developed in house or made use from existing systems. The system is developed under the assumption that the external component is reliable, secure, scalable and functional.
+
+\newpage
+\section{Specific functional requirements}
+
+\subsection{User Application Module} 
+% Get Personal Number from Photo (Application view)
+\begin{enumerate}[leftmargin=0.8in]
+		\item \label{UAMLogging} The UAM shall support the log in of users
+    \item If and only if the log in of a user is successful (see \ref{UAMLogging}) the user shall be able to use the functionality of the application.
+		\item \label{UAMCAM} The UAM should be able to access the camera of a users device.
+    \item \label{UAMCAM} The UAM should be able to send a picture to the URM.
+    \item \label{UAMRet} The UAM should be able to process and show PNs.
+		\item The UAM shall encrypt all outgoing requests and be able to decrypt all incoming responses.
+\end{enumerate}
+
+\subsection{User Repository Module} \label{User Repository Module}
+% Get Personal Number from Photo (Repository view)
+\begin{enumerate}[leftmargin=0.8in]
+		\item Upon successful login request from the UAM the URM shall grant access. \ref{UAMLogging}.
+		\item The URM shall be able to decrypt all incoming requests and encrypt all outgoing responses.
+		\item The URM should only process requests from authenticated users.
+		\item The URM shall be able to retrieve a PN from a Photo.
+		\item The URM shall be able to send a well formated response to the UAM.
+\end{enumerate}
+
+\subsection{Admin Repository Module} \label{3.3 Admin Repository Module}
+% Add, Delete, Update, Get multiple users
+\begin{enumerate}[leftmargin=0.8in]
+		\item \label{ACMLogging} The ARM shall be able to authenticate admins.
+		\item The ARM shall be able to decrypt all incoming requests and encrypt all outgoing responses.
+		\item \label{ARMRequest} The ARM should only process requests from authenticated admins.
+		\item The ARM should be able to READ, DELETE, CREATE, UPDATE User-Entities. \label{ARMFunctionality}
+\end{enumerate}
+\newpage
+\section{Domain Model}
+\begin{figure}[ht!]
+	\centering
+	\includegraphics[width=150mm]{Domain.jpg}
+	\caption{Domain Model \label{Domain Model}}
+\end{figure}
+
+\newpage
+\section{Modeling of functional requirements (Usecases \& Scenarios)}
+\subsection{Overview Use cases}
+\vspace{1.6cm}
+\includegraphics[scale=0.9]{images/UserCaseDiagram.pdf}
+
+\subsection{UAM: GET Personal Number}
+
+\begin{tabular}{|p{3.5cm}|p{11.5cm}|} \hline
+    \textbf{Title} &  User \emph{GET} personal number
+
+    \\ \hline \rowcolor{Gray} & \\ \hline
+
+    \textbf{Covered requirements} &  \ref{UAMCAM} and \ref{UAMRet}
+
+    \\ \hline \rowcolor{Gray} & \\ \hline
+
+    \textbf{Description} &  The user should be able to provide an image of a person's face within the UAM. Using the EFR the image will be compared to other images within the server. The user will then receive a PN matching the originally provided image. In the event that request fails an error message will be provided to the user further specifying the issue.
+
+    \\ \hline \rowcolor{Gray} & \\ \hline
+
+    \textbf{Primary actor} & User
+
+    \\ \hline \rowcolor{Gray} & \\ \hline
+
+    \textbf{Pre-conditions} &   User must be authenticated (see \ref{UAMLogging})
+
+    \\ \hline \rowcolor{Gray} & \\ \hline
+
+    \textbf{Post-conditions} &   User must receive a notification
+        
+    \\ \hline \rowcolor{Gray} & \\ \hline 
+         
+    \textbf{Primary flow} & 
+    \textbf{1)} User send an image of a person's face \\&
+    \textbf{2)} User receives a success notification and matching PN
+        
+    \\ \hline \rowcolor{Gray} & \\ \hline 
+         
+    \textbf{Secondary flow} \emph{(Face does not match)} & 
+    \textbf{2a)} User receives a failure notification
+    
+    \\ \hline 
+\end{tabular}
+
+
+%ADMIN
+\subsection{ARM: Get List of User-Entities}
+
+\begin{tabular}{|p{3.5cm}|p{11.5cm}|} \hline
+    \textbf{Title} &   Admin \emph{RETRIEVE} list of user-entities
+
+    \\ \hline \rowcolor{Gray} & \\ \hline
+
+    \textbf{Covered requirements} &  \ref{ARMRequest}
+
+    \\ \hline \rowcolor{Gray} & \\ \hline
+
+    \textbf{Description} &  The admin should be able to get a list of all the user-entities from the FRS.
+
+    \\ \hline \rowcolor{Gray} & \\ \hline
+
+    \textbf{Primary actor} & Admin
+
+    \\ \hline \rowcolor{Gray} & \\ \hline
+
+    \textbf{Pre-conditions} &   Admin must be authenticated (see \ref{ACMLogging})
+
+    \\ \hline \rowcolor{Gray} & \\ \hline
+
+    \textbf{Post-conditions} &   Admin must receive a notification
+                
+    \\ \hline \rowcolor{Gray} & \\ \hline 
+         
+    \textbf{Primary flow} & 
+    \textbf{1)} Admin sends a GET request \\&
+    \textbf{2)} Admin receives a success notification and list of all the user-entities currently
+        
+    \\ \hline \rowcolor{Gray} & \\ \hline 
+         
+    \textbf{Secondary flow} \emph{(Internal server error)} & 
+    \textbf{2a)} Admin receives a failure notification
+    
+    \\ \hline 
+\end{tabular}
+
+
+\subsection{ARM: Add an User-Entity}
+
+\begin{tabular}{|p{3.5cm}|p{11.5cm}|} \hline
+    \textbf{Title} &   Admin \emph{ADD} a new user
+
+    \\ \hline \rowcolor{Gray} & \\ \hline
+
+    \textbf{Covered requirements} &  \ref{ARMRequest}
+
+    \\ \hline \rowcolor{Gray} & \\ \hline
+    
+    \textbf{Description} &  Admin want to add a new user. In order to add a new user, admin send a POST request to FRS which include user's image and PN. In result, admin receives an appropriate notification from the FRS.
+        
+    \\ \hline \rowcolor{Gray} & \\ \hline
+
+    \textbf{Primary actor} & Admin
+
+    \\ \hline \rowcolor{Gray} & \\ \hline
+
+    \textbf{Pre-conditions} &   Admin must be authenticated (see \ref{ACMLogging})
+
+    \\ \hline \rowcolor{Gray} & \\ \hline
+
+    \textbf{Post-conditions} &   Admin must receive a notification
+        
+    \\ \hline \rowcolor{Gray} & \\ \hline 
+         
+    \textbf{Primary flow} &
+    \textbf{1)} Admin sends a POST request \\&
+    \textbf{2)} Admin receives a success notification
+        
+    \\ \hline \rowcolor{Gray} & \\ \hline 
+         
+    \textbf{Secondary flow} \emph{(User image is corrupted)} & 
+    \textbf{2a)} Admin receives a failure notification
+     
+    \\ \hline \rowcolor{Gray} & \\ \hline 
+     
+    \textbf{Secondary flow} \emph{(User PN format is incorrect)} & 
+    \textbf{2a)} Admin receives a failure notification
+    
+   \\ \hline \rowcolor{Gray} & \\ \hline
+    
+    \textbf{Secondary flow} \emph{(User PN is invalid)} & 
+    \textbf{2a)} Admin receives a failure notification
+    
+    \\ \hline \rowcolor{Gray} & \\ \hline
+    
+    \textbf{Secondary flow} \emph{(User image is corrupted and PN is invalid)} & 
+    \textbf{2a)} Admin receives a failure notification
+    
+    \\ \hline \rowcolor{Gray} & \\ \hline
+    
+    \textbf{Secondary flow} \emph{(User image is corrupted and PN format is incorrect)} & 
+    \textbf{2a)} Admin receive a failure notification
+    
+    \\\hline 
+\end{tabular}
+
+
+\newpage
+\noindent
+
+\subsection{ARM: Delete an User-Entity}
+
+\begin{tabular}{|p{3.5cm}|p{11.5cm}|} \hline
+    \textbf{Title} &   Admin \emph{DELETE} a user
+
+    \\ \hline \rowcolor{Gray} & \\ \hline
+
+    \textbf{Covered requirements} &  \ref{ARMRequest}
+
+    \\ \hline \rowcolor{Gray} & \\ \hline
+
+    \textbf{Description} &  Admin want to delete a user. In order to delete a user, admin send a DELETE request to FRS which include user's unique id(should be integer). In result, admin receives an appropriate notification from the FRS.
+
+    \\ \hline \rowcolor{Gray} & \\ \hline
+
+    \textbf{Primary actor} & Admin
+
+    \\ \hline \rowcolor{Gray} & \\ \hline
+
+    \textbf{Pre-conditions} &   Admin must be authenticated (see \ref{ACMLogging})
+
+    \\ \hline \rowcolor{Gray} & \\ \hline
+
+    \textbf{Post-conditions} &   Admin must receive a notification
+        
+    \\ \hline \rowcolor{Gray} & \\ \hline 
+         
+    \textbf{Primary flow} &
+    \textbf{1)} Admin sends a DELETE request \\&
+    \textbf{2)} Admin receives a success notification
+        
+    \\ \hline \rowcolor{Gray} & \\ \hline 
+         
+    \textbf{Secondary flow} \emph{(User id not found)} & 
+    \textbf{2a)} Admin receives a failure notification
+     
+    \\ \hline \rowcolor{Gray} & \\ \hline 
+     
+    \textbf{Secondary flow} \emph{(User id format is incorrect)} & 
+    \textbf{2a)} Admin receives a failure notification
+    
+    \\ \hline 
+\end{tabular}
+
+\subsection{ARM: Update User-Entity}
+
+\begin{tabular}{|p{3.5cm}|p{11.5cm}|} \hline
+    \textbf{Title} &   Admin \emph{UPDATE} a user
+
+    \\ \hline \rowcolor{Gray} & \\ \hline
+
+    \textbf{Covered requirements} &  \ref{ARMRequest}
+
+    \\ \hline \rowcolor{Gray} & \\ \hline
+
+    \textbf{Description} &  Admin want to update a user. In order to update a user, admin sends an update request to FRS which includes the user's new unique id(should be integer) and/or the new photo. In result, admin receives an appropriate notification from the FRS.
+
+    \\ \hline \rowcolor{Gray} & \\ \hline
+
+    \textbf{Primary actor} & Admin
+
+    \\ \hline \rowcolor{Gray} & \\ \hline
+
+    \textbf{Pre-conditions} &   Admin must be authenticated (see \ref{ACMLogging})
+   
+    \\ \hline \rowcolor{Gray} & \\ \hline 
+   
+    \textbf{Post-conditions} &   Admin must receive a notification 
+   
+    \\ \hline \rowcolor{Gray} & \\ \hline  
+   
+    \textbf{Primary flow} &  
+    \textbf{1)} The admin sends the new PN and/or picture \\& 
+    \textbf{2)} The Admin receives a success notification. 
+   
+    \\ \hline \rowcolor{Gray} & \\ \hline  
+     
+    \textbf{Secondary flow} \emph{(User id not found)} &  
+    \textbf{2a)} Admin receives a failure notification  
+   
+    \\ \hline \rowcolor{Gray} & \\ \hline  
+   
+    \textbf{Secondary flow} \emph{(User PN format is incorrect)} &  
+    \textbf{2a)} Admin receives a failure notification
+   
+    \\ \hline \rowcolor{Gray} & \\ \hline  
+   
+    \textbf{Secondary flow} \emph{(User PN is invalid)} &  
+    \textbf{2a)} Admin receives a failure notification
+   
+    \\ \hline \rowcolor{Gray} & \\ \hline  
+    
+    \textbf{Secondary flow} \emph{(User new image is corrupted)} &  
+    \textbf{2a)} Admin receives a failure notification 
+    
+    \\ \hline   
+\end{tabular} 
+
+\subsection{ARM: Authenticate Admin}
+
+\begin{tabular}{|p{3.5cm}|p{11.5cm}|} \hline
+    \textbf{Title} &   Admin \emph{AUTHENTICATES}
+
+    \\ \hline \rowcolor{Gray} & \\ \hline
+
+    \textbf{Covered requirements} &  \ref{ACMLogging}
+  
+    \\ \hline \rowcolor{Gray} & \\ \hline 
+  
+    \textbf{Description} &  Admin want to authenticate. In order to authenticate, admin sends an authentication request to FRS which includes the correct credentials. In result, admin can access the system. 
+   
+    \\ \hline \rowcolor{Gray} & \\ \hline 
+   
+    \textbf{Primary actor} & Admin   
+   
+    \\ \hline \rowcolor{Gray} & \\ \hline  
+   
+    \textbf{Pre-conditions} &   Admin accessed to the main page of the system 
+   
+    \\ \hline \rowcolor{Gray} & \\ \hline 
+   
+    \textbf{Post-conditions} &   Admin receives access to the system 
+   
+    \\ \hline \rowcolor{Gray} & \\ \hline  
+   
+    \textbf{Primary flow} &  
+    \textbf{1)} Admin sends an authentication request with credentials  \\& 
+    \textbf{2)} Access granted
+    
+    \\ \hline \rowcolor{Gray} & \\ \hline  
+   
+    \textbf{Secondary flow} \emph{(Credentials are incorrect)} &  
+    \textbf{2a)} Admin receives a failure notification \\ &
+    \textbf{2b)} Access denied
+    
+    \\ \hline   
+\end{tabular}
+
+
+\subsection{URM: Authenticate User}
+
+\begin{tabular}{|p{3.5cm}|p{11.5cm}|} \hline
+    \textbf{Title} &   User \emph{AUTHENTICATES}
+
+    \\ \hline \rowcolor{Gray} & \\ \hline
+
+    \textbf{Covered requirements} & \ref{UAMLogging}
+  
+    \\ \hline \rowcolor{Gray} & \\ \hline 
+  
+    \textbf{Description} &  User want to authenticate. In order to authenticate, user sends an authentication request to FRS which includes the correct credentials. In result, user can access the system. 
+   
+    \\ \hline \rowcolor{Gray} & \\ \hline 
+   
+    \textbf{Primary actor} & User   
+   
+    \\ \hline \rowcolor{Gray} & \\ \hline  
+   
+    \textbf{Pre-conditions} &   User accessed to the main page of the system 
+   
+    \\ \hline \rowcolor{Gray} & \\ \hline 
+   
+    \textbf{Post-conditions} &   User receives access to the system 
+   
+    \\ \hline \rowcolor{Gray} & \\ \hline  
+    
+    \textbf{Primary flow} &  
+    \textbf{1)} User sends an authentication request with credentials.  \\& 
+    \textbf{2)} Access granted
+    
+    \\ \hline \rowcolor{Gray} & \\ \hline  
+    
+    \textbf{Secondary flow} \emph{(Credentials are incorrect)} &  
+    \textbf{2a)} User receives a failure notification \\ &
+    \textbf{2b)} Access denied
+    
+    \\ \hline   
+\end{tabular} 
+
+\end{document}
+
+\section{The Domain Model}
+
+\begin{figure}[ht!]
+	\centering
+	\includegraphics[width=150mm]{Domain.jpg}
+	\caption{The Domain Model \label{overflow}}
+\end{figure}
+
+\end{document}
+
